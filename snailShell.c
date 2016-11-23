@@ -17,7 +17,7 @@ int main() {
       return 0;
     }
     
-    strtok(input,"\n");
+    *(strchr(input, '\n')) = NULL; //strtok(input,"\n");
   
 
     char *s = input;
