@@ -36,7 +36,7 @@ int main() {
 
      if(!strcmp(commands[0],"cd")){
       //gets your current path
-      char path[10];
+      char path[100];
       getcwd(path, 100);
       printf("This is your current path: %s\n", path);
         
@@ -53,18 +53,18 @@ int main() {
       dirs[i]=0;
         
       //prints out the directories to path
-      /*int i=0;
-      while(dirs[i]){
+      int i=0;
+      /*while(dirs[i]){
 	printf("directory: %s\n", dirs[i]);
 	i++;
-      }*/
+	}*/
       
       /*i=0;
       while(dirs[i]){
 	printf("directory: %s\n", dirs[i]);
 	i++;
-	}*/
-
+	}
+      */
         
       //creates new path according to input
       char newpath[100];
@@ -74,39 +74,37 @@ int main() {
       while(dirs[i]){
 	printf("directory: %s\n", dirs[i]);
 	i++;
-      }*/
+	}*/
       
       //printf("directory: %s\n", dirs[2]);
       
       i=0;
 
       if (!strcmp(commands[1],"..")){
-	printf("command is ..\n");
 	while (dirs[i]) {
-	  printf("adding: %s\n",dirs[i]);
+	  //printf("adding: %s\n",dirs[i]);
 	  strcat(newpath, dirs[i]);
 	  strcat(newpath, "/");
-	  printf("the path: %s\n",newpath );
+	  //printf("the path: %s\n",newpath );
 	  i++;
 	}    
       }else{
-	printf("command not ..\n");
 	while (dirs[i]) {
-	  printf("adding: %s\n",dirs[i]);
+	  // printf("adding: %s\n",dirs[i]);
 	  strcat(newpath, dirs[i]);
 	  strcat(newpath, "/");
-	  printf("the path: %s\n",newpath );
+	  // printf("the path: %s\n",newpath );
 	  i++;
 	}
       }
         
       strcat(newpath, commands[1]);
-      printf("the new path: %s\n", newpath);
+      //printf("the new path: %s\n", newpath);
         
       //changes directory
       printf("Error?: %d\n", chdir(newpath));
       getcwd(path, 100);
-      printf("This is your current path now: %s\n", path);
+      printf("This is your new path: %s\n", path);
        
       /*printf("Error?: %d\n", chdir("/home/cg"));
         getcwd(path, 100);
