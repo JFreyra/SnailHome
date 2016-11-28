@@ -29,26 +29,22 @@ void cd(char *commands[]){
       
   //creates new path according to input
   char newpath[100];
-  strcpy(newpath, "/");
+  
   i=0;   
-  if (!strcmp(commands[1],"..")){
-    while (dirs[i]) {
-      //printf("adding: %s\n",dirs[i]);
-      strcat(newpath, dirs[i]);
-      strcat(newpath, "/");
-      //printf("the path: %s\n",newpath );
-      i++;
-    }    
+  //if new path given from root, copy the input to newpath
+  if(!strncmp(commands[1], "/", 1)){
+    strcpy(newpath, commands[1]);
   }else{
+    //else append the input to current path
+    strcpy(newpath, "/");
     while (dirs[i]) {
-      // printf("adding: %s\n",dirs[i]);
       strcat(newpath, dirs[i]);
       strcat(newpath, "/");
-      // printf("the path: %s\n",newpath );
       i++;
     }
-  }  
-  strcat(newpath, commands[1]);
+
+    strcat(newpath, commands[1]);
+  }
       
   //changes directory
   if(chdir(newpath))
@@ -66,11 +62,11 @@ void command(char* path, char* args [], int in, int out){
   //  int std_in =dup(STDIN_FILENO);
   //int std_out =dup(STDOUT_FILENO);
   if (in != STDIN_FILENO){
-    dup2(in, STDIN_FILENO);
+  dup2(in, STDIN_FILENO);
   }  
     
   if (out != STDOUT_FILENO){
-    dup2(out, STDOUT_FILENO);
+  dup2(out, STDOUT_FILENO);
   }
   */
   
@@ -119,27 +115,27 @@ void main() {
     }
 
     /*
-    int PR = 0;
-    if(strchr(input,'>') || strchr(input,'<') || strchr(input,'|'))
+      int PR = 0;
+      if(strchr(input,'>') || strchr(input,'<') || strchr(input,'|'))
       PR = 1;
     */
     
     /*
-    char * newLine=strchr(input, '\n');
-    if (newLine)
+      char * newLine=strchr(input, '\n');
+      if (newLine)
       *newLine = NULL; */
     strtok(input,"\n");
   
-//Searches for <
+    //Searches for <
     int source, dest;
     
     if (strchr(input, '<')){
-        char * path=strsep(&input, "'<'");
-        //Clear leading whitespace of files
-        while(path[0] != ' ')
-	  path++;
+      char * path=strsep(&input, "'<'");
+      //Clear leading whitespace of files
+      while(path[0] != ' ')
+	path++;
 
-	source=open(path, O_RDONLY);
+      source=open(path, O_RDONLY);
     }
     else source = STDIN_FILENO;
     
@@ -159,7 +155,7 @@ void main() {
       printf("???: %s\n", input);
 
       while(path2[0] == ' ')
-            path2++;
+	path2++;
             
       dest = open(path2, O_CREAT, 0644);
       close(dest);
@@ -189,17 +185,17 @@ void main() {
     }
 
     command(commands[0], commands, source, dest);
-/*
-    int pid=fork();
+    /*
+      int pid=fork();
 
-    if (!pid){
-	  execvp(commands[0],commands);
-	  printf("%s \n", strerror(errno));
-    }
+      if (!pid){
+      execvp(commands[0],commands);
+      printf("%s \n", strerror(errno));
+      }
     
-    if (pid)
+      if (pid)
       waitpid(pid);
-*/
+    */
 
   }
   
