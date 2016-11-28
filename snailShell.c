@@ -4,6 +4,7 @@
 #include <string.h>
 #include <errno.h>
 
+
 // gets your current path
 void cd(char *commands[]){
   
@@ -54,11 +55,28 @@ void cd(char *commands[]){
   
 }
 
-void PorR(){
+void command(char* path, char* args [], fd in, fd out){
+    if (in != STDIN_FILENO){
+        dup2(in, STDIN_FILENO);
+    }  
+    
+    if (out != STDOUT_FILENO){
+        dup2(out, STDOUT_FILENO);
+    } 
+    
+    int pid=fork();
+
+    if (!pid){
+	  execvp(path, args);
+	  printf("%s \n", strerror(errno));
+    }
+    
+    if (pid)
+      waitpid(pid);
 
 }
 
-int main() {
+void main() {
 
   while(1){
     char input[256];
@@ -71,17 +89,45 @@ int main() {
       continue;
     }
 
+    /*
     int PR = 0;
     if(strchr(input,'>') || strchr(input,'<') || strchr(input,'|'))
       PR = 1;
-
+    */
+    
     /*
     char * newLine=strchr(input, '\n');
     if (newLine)
       *newLine = NULL; */
     strtok(input,"\n");
   
-
+//Searches for < or >
+    fd source, dest;
+    
+    if (strchr(input, '<')){
+        char * path=strsep(*input, '<');
+        //Clear leading whitespace of files
+        while(strcmp(path[0]," ") != 0)
+            path++;
+        //File came first --> swap source and file.
+        char * temp = path;
+        path = input;
+        input = temp;
+        
+        source = open(source, O_CREAT, O_WRONLY);
+    }
+    else source = STDIN_FILENO;
+    
+    if (strchr(input, '>')){
+        char * path2 = strsep(*input, "'>'");
+        while(strcmp(path2[0]," ") != 0)
+            path2++;
+            
+        dest = open(dest, O_CREAT, O_WRONLY);
+        
+    }
+    else dest = STDOUT_FILENO;
+    
     char *s = input;
     char *commands[10];
   
@@ -101,20 +147,19 @@ int main() {
       cd(commands);
       continue;
     }
-      
+
+    command(commands[0], commands, source, dest);
+/*
     int pid=fork();
 
     if (!pid){
-      if(PR)
-	PorR();
-      else{
-	execvp(commands[0],commands);
-	printf("%s \n", strerror(errno));
-      }
-
+	  execvp(commands[0],commands);
+	  printf("%s \n", strerror(errno));
     }
+    
     if (pid)
       waitpid(pid);
+*/
 
   }
   
