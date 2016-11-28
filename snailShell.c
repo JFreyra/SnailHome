@@ -3,9 +3,10 @@
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
+#include <fcntl.h>
 
-
-// gets your current path
+// Takes a path directly as it is received from the input.
+// changes directory to that path.
 void cd(char *commands[]){
   
   char path[100];
@@ -55,6 +56,7 @@ void cd(char *commands[]){
   
 }
 
+//Takes in the
 void command(char* path, char* args [], fd in, fd out){
     if (in != STDIN_FILENO){
         dup2(in, STDIN_FILENO);
