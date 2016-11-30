@@ -58,56 +58,37 @@ void cd(char *commands[]){
   
 }
 
-//Takes in the arguments to execvp
-void redirect(char* path, char* args []){
-  //printf("still alive?\n");
-
-  /*
-  //  int std_in =dup(STDIN_FILENO);
-  //int std_out =dup(STDOUT_FILENO);
-  if (in != STDIN_FILENO){
-    dup2(in, STDIN_FILENO);
-  }  
-    
-  if (out != STDOUT_FILENO){
-    dup2(out, STDOUT_FILENO);
+int redirect_index(char* args[], char *c){
+  int i = 0;
+  while(args){
+    if(strcmp(*(*args),c)) return i;
+    i++;
+    args++;
   }
-  */
-  
-  //printf("how bout now?\n");
+  return -1;
+}
 
-  /*
+//Takes in the arguments to execvp
+void redirect(char* path, char* args [], int indicator){
 
-    DOES NOT WORK YET
+  // indicator
+  // 001 == >
+  // 010 == <
+  // 100 == |
 
-    POSSIBLE SOLUTIONS:
+  int stdin = dup(0);
+  int stdout = dup(1);
 
-    for > :
-        save pointer or file descriptor to end file
-	ex. ls -l > foo.txt : save file descriptor to foo.txt (can be reused if there are more redirections)
+  int in, out, pipe;
 
-    for < :
-        save output in a temp.txt file
-	ex. <program> < <file> : save output into a file to use in other redirections
-
-   */
+  //if(indicator/1)
+    
+    
 
   int pid=fork();
 
   if (!pid){
-    if (in != STDIN_FILENO){
-      dup2(in, STDIN_FILENO);
-      close(in);
-    }  
-    
-    if (out != STDOUT_FILENO){
-      dup2(out, STDOUT_FILENO);
-      close(out);
-    }
-    
-    execvp(path, args);
-    printf("%s \n", strerror(errno));
-    exit(1);
+
   }
     
   if (pid){
@@ -130,9 +111,10 @@ void main() {
     fgets(input,256,stdin);
     
     int redirect = 0;
-    if(strchr(input,'>') || strchr(input,'<') || strchr(input,'|'))
-      redirect = 1;
-    //printf("%s\n", input);
+    if(strchr(input,'>')) redirect += 1;
+    if(strchr(input,'<')) redirect += 10;
+    if(strchr(input,'|')) redirect += 100;
+
     if (!strcmp(input,"\n")) {
       continue;
     }
@@ -204,7 +186,7 @@ void main() {
 
     if (!pid){
       if(redirect)
-	redirect(commands[0],commands);
+	redirect(commands[0],commands,redirect);
       else{
 	execvp(commands[0],commands);
 	printf("%s \n", strerror(errno));
