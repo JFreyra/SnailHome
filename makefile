@@ -1,5 +1,5 @@
-all: snailShell.c
-	gcc -o snailShell snailShell.c
+all: snailShellCopy.c
+	gcc -o snailShell snailShellCopy.c
 
 run: all
 	./snailShell

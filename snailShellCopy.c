@@ -61,7 +61,7 @@ void cd(char *commands[]){
 int redirect_index(char* args[], char *c){
   int i = 0;
   while(args){
-    if(strcmp(*(*args),c)) return i;
+    if(strcmp(*args,c)) return i;
     i++;
     args++;
   }
@@ -72,28 +72,59 @@ int redirect_index(char* args[], char *c){
 void redirect(char* path, char* args [], int indicator){
 
   // indicator
-  // 001 == >
-  // 010 == <
-  // 100 == |
+  // 100 == <
+  // 010 == >
+  // 001 == |
 
   int stdin = dup(0);
   int stdout = dup(1);
 
   int in, out, pipe;
+  int inIND, outIND, pipeIND;
 
-  //if(indicator/1)
-    
-    
+  if(indicator/100){
+    printf("\n\n ENTERED \n\n");
+    indicator = indicator/100;
+    int inIND = redirect_index(args,"<") + 1; //location of new stdin
+    in = open(args[inIND], O_RDONLY);
+    if(in == -1){
+      printf("In File does not exist\n");
+      return;
+    }
+    dup2(in,0);
+  }
+
+  if(indicator/10){
+    indicator = indicator/10;
+    int outIND = redirect_index(args,">") + 1; //location of new stdout
+    out = open(args[outIND], O_WRONLY | O_CREAT | O_EXCL);
+    if(out == -1){
+      printf("In File does not exist\n");
+      return;
+    }
+    dup2(out,0);
+  }
+
+  args[inIND] = NULL;
+  args[outIND] = NULL;
+
+  while(args){
+    printf("%s\n",*args);
+    args++;
+  }
 
   int pid=fork();
 
   if (!pid){
-
+    //execvp(args[0],args);
   }
     
   if (pid){
     wait(&pid);
   }
+
+  dup2(stdin,0);
+  close(in);
 
 }
 
@@ -110,10 +141,10 @@ void main() {
     printf("%s >> ", path);
     fgets(input,256,stdin);
     
-    int redirect = 0;
-    if(strchr(input,'>')) redirect += 1;
-    if(strchr(input,'<')) redirect += 10;
-    if(strchr(input,'|')) redirect += 100;
+    int red = 0;
+    if(strchr(input,'>')) red += 1;
+    if(strchr(input,'<')) red += 10;
+    if(strchr(input,'|')) red += 100;
 
     if (!strcmp(input,"\n")) {
       continue;
@@ -185,8 +216,8 @@ void main() {
     int pid=fork();
 
     if (!pid){
-      if(redirect)
-	redirect(commands[0],commands,redirect);
+      if(red)
+	redirect(commands[0],commands,red);
       else{
 	execvp(commands[0],commands);
 	printf("%s \n", strerror(errno));
