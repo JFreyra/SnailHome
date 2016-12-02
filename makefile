@@ -6,4 +6,5 @@ run: all
 
 clean:
 	rm snailShell
+	rm *.txt
 	rm *~
