@@ -6,6 +6,7 @@
 #include <fcntl.h>
 #include <sys/wait.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 
 // Takes a path directly as it is received from the input.
 // changes directory to that path.
@@ -29,22 +30,22 @@ void cd(char *commands[]){
       
   //creates new path according to input
   char newpath[100];
-  
+  strcpy(newpath, "/");
   i=0;   
-  //if new path given from root, copy the input to newpath
-  if(!strncmp(commands[1], "/", 1)){
-    strcpy(newpath, commands[1]);
+  if (!strcmp(commands[1],"..")){
+    while (dirs[i]) {
+      strcat(newpath, dirs[i]);
+      strcat(newpath, "/");
+      i++;
+    }    
   }else{
-    //else append the input to current path
-    strcpy(newpath, "/");
     while (dirs[i]) {
       strcat(newpath, dirs[i]);
       strcat(newpath, "/");
       i++;
     }
-
-    strcat(newpath, commands[1]);
-  }
+  }  
+  strcat(newpath, commands[1]);
       
   //changes directory
   if(chdir(newpath))
@@ -54,46 +55,77 @@ void cd(char *commands[]){
   
 }
 
-//Takes in the arguments to execvp as well as file descriptors for the input and output. 
-void command(char* path, char* args [], int in, int out){
-  //printf("still alive?\n");
-
-  /*
-  //  int std_in =dup(STDIN_FILENO);
-  //int std_out =dup(STDOUT_FILENO);
-  if (in != STDIN_FILENO){
-  dup2(in, STDIN_FILENO);
-  }  
-    
-  if (out != STDOUT_FILENO){
-  dup2(out, STDOUT_FILENO);
+int redirect_index(char* args[], char *c){
+  int i = 1;
+  while(args){
+    if(strcmp(*args,c)) return i;
+    i++;
+    args++;
   }
-  */
+  return -1;
+}
+
+//Takes in the arguments to execvp
+void redirect(char* path, char* args [], int* ind){
   
-  //printf("how bout now?\n");
+  // indicator
+  // 100 == <
+  // 010 == >
+  // 001 == |
+
+  int indicator = *ind;
+  int stdin = dup(0);
+  int stdout = dup(1);
+  
+  int in, out, pipe;
+  int inIND = 0;
+  int outIND = 0;
+  int pipeIND = 0;
+  
+  if(indicator/100){
+    indicator = indicator/100;
+    inIND = redirect_index(args,"<") + 1; //location of new stdin
+    in = open(args[inIND], O_RDONLY);
+    if(in == -1){
+      printf("In File does not exist\n");
+      return;
+    }
+    dup2(in,0);
+  }
+  
+  if(indicator/10){
+    indicator = indicator/10;
+    outIND = redirect_index(args,">") + 1; //location of new stdout
+    out = open(args[outIND], O_WRONLY | O_CREAT, 0644);
+    printf("out: %d\n",out);
+    if(out == -1){
+      printf("Out File does not exist: %s\n",strerror(errno));
+      return;
+    }
+    dup2(out,1);
+  }
+  
+  //  printf("LOC: %s\n",args[outIND-1]);
+  
+  if(inIND) args[inIND-1] = NULL;
+  if(outIND) args[outIND-1] = NULL;
+  if(pipeIND) args[pipeIND-1] = NULL;
 
   int pid=fork();
 
   if (!pid){
-    if (in != STDIN_FILENO){
-      dup2(in, STDIN_FILENO);
-      close(in);
-    }  
-    
-    if (out != STDOUT_FILENO){
-      dup2(out, STDOUT_FILENO);
-      close(out);
-    }
-    
-    execvp(path, args);
-    printf("%s \n", strerror(errno));
+    execvp(args[0],args);
     exit(1);
   }
     
   if (pid){
-    int s;
-    wait(&s);
+    wait(&pid);
   }
+
+  dup2(stdin,0);
+  close(in);
+  dup2(stdout,1);
+  close(out);
 
 }
 
@@ -109,93 +141,46 @@ void main() {
     getcwd(path, 666);
     printf("%s >> ", path);
     fgets(input,256,stdin);
-    //printf("%s\n", input);
+    
+    int red = 0;
+    if(strchr(input,'<')) red += 100;
+    if(strchr(input,'>')) red += 10;
+    if(strchr(input,'|')) red += 1;
+
     if (!strcmp(input,"\n")) {
       continue;
     }
 
-    /*
-      int PR = 0;
-      if(strchr(input,'>') || strchr(input,'<') || strchr(input,'|'))
-      PR = 1;
-    */
-    
-    /*
-      char * newLine=strchr(input, '\n');
-      if (newLine)
-      *newLine = NULL; */
+    if (strstr(input,"exit")) exit(1);
+
     strtok(input,"\n");
-  
-    //Searches for <
-    int source, dest;
-    
-    if (strchr(input, '<')){
-      char * path=strsep(&input, "'<'");
-      //Clear leading whitespace of files
-      while(path[0] != ' ')
-	path++;
-
-      source=open(path, O_RDONLY);
-    }
-    else source = STDIN_FILENO;
-    
-    if (strchr(input, '>')){
-      //printf("%s\n",input);
-      char * path2 = strsep(&input, "'>'");
-
-      printf("ouput file: %s\n", path2);
-      printf("???: %s\n", input);
-      //File came first --> swap source and file.
-
-      char *temp=path2;
-      path2=input;
-      input=temp;
-      
-      printf("ouput file: %s\n", path2);
-      printf("???: %s\n", input);
-
-      while(path2[0] == ' ')
-	path2++;
-            
-      dest = open(path2, O_CREAT, 0644);
-      close(dest);
-      open(path2, O_WRONLY);
-      //printf("sadface \n");
-    }
-    else dest = STDOUT_FILENO;
-    
-    char *s = input;
-    char *commands[10];
-  
-    int i = 0;
-    while (s) {
-      commands[i] = strsep(&s," ");
-      //printf("%s \n", commands[i]);
-      i++;
-    }
-    commands[i]=NULL;
-
-    if(!strcmp(commands[0],"exit")){
-      exit(1);
-    }
 
     if(!strcmp(commands[0],"cd")){
       cd(commands);
       continue;
     }
 
-    command(commands[0], commands, source, dest);
-    /*
-      int pid=fork();
+    //command(commands[0], commands, source, dest);
 
-      if (!pid){
-      execvp(commands[0],commands);
-      printf("%s \n", strerror(errno));
+    int pid=fork();
+
+    if (!pid){
+      if(red){
+	printf("%d\n",red);
+	redirect(commands[0],commands,&red);
       }
+      else{
+	execvp(commands[0],commands);
+	printf("%s \n", strerror(errno));
+      }
+      exit(1);
+    }
     
-      if (pid)
-      waitpid(pid);
-    */
+    if (pid)
+      wait(&pid);
+
+    /* free(path); */
+    /* free(input); */
 
   }
   

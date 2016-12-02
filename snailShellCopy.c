@@ -100,7 +100,7 @@ void redirect(char* path, char* args [], int* ind){
   if(indicator/10){
     indicator = indicator/10;
     outIND = redirect_index(args,">") + 1; //location of new stdout
-    out = open(args[outIND], O_WRONLY | O_CREAT);
+    out = open(args[outIND], O_WRONLY | O_CREAT, 0644);
     printf("out: %d\n",out);
     if(out == -1){
       printf("Out File does not exist: %s\n",strerror(errno));
@@ -227,6 +227,7 @@ void main() {
       if(red){
 	printf("%d\n",red);
 	redirect(commands[0],commands,&red);
+	printf("testing\n");
       }
       else{
 	execvp(commands[0],commands);
