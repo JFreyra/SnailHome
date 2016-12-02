@@ -81,7 +81,12 @@ void redirect(char* path, char* args [], int* ind){
   int inIND = 0;
   int outIND = 0;
   int pipeIND = 0;
-  
+
+  if(indicator%10 && indicator/10){
+    printf("Only redirects or one pipe, not both\n");
+    return;
+  }
+
   if(indicator/100){
     indicator = indicator/100;
     inIND = redirect_index(args,"<") + 1; //location of new stdin
@@ -104,12 +109,18 @@ void redirect(char* path, char* args [], int* ind){
     }
     dup2(out,1);
   }
-  
+
+  if(indicator/1){
+    pipeIND = redirect_index(args,"|"); //location of pipe
+    int prog1IND = 0; // first arg is always program
+    int prog2IND = pipeIND + 1; // arg after | is always second program
+  }
+
   //  printf("LOC: %s\n",args[outIND-1]);
   
   if(inIND) args[inIND-1] = NULL;
   if(outIND) args[outIND-1] = NULL;
-  if(pipeIND) args[pipeIND-1] = NULL;
+  if(pipeIND) args[pipeIND] = NULL;
 
   int pid=fork();
 
@@ -154,6 +165,17 @@ void main() {
     if (strstr(input,"exit")) exit(1);
 
     strtok(input,"\n");
+
+    char *s = input;
+    char *commands[10];
+  
+    int i = 0;
+    while (s) {
+      commands[i] = strsep(&s," ");
+      //printf("%s \n", commands[i]);
+      i++;
+    }
+    commands[i]=NULL;
 
     if(!strcmp(commands[0],"cd")){
       cd(commands);
