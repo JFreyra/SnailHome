@@ -96,7 +96,7 @@ void redirect(char* path, char* args [], int* ind){
   int stdin = dup(0);
   int stdout = dup(1);
   
-  int in, out, pipe, prog2IND;
+  int in, out, pipe, prog1IND, prog2IND;
   int inIND = 0;
   int outIND = 0;
   int pipeIND = 0;
