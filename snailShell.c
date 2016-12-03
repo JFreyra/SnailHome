@@ -10,6 +10,10 @@
 
 // Takes a path directly as it is received from the input.
 // changes directory to that path.
+
+ /*  Inputs: char *commands[] */
+ /* Returns: Nothing */
+	     
 void cd(char *commands[]){
   
   char path[100];
@@ -55,6 +59,16 @@ void cd(char *commands[]){
   
 }
 
+ /*  Inputs: char *args[] */
+ /* 	     char *c */
+ /* Returns: Index of c in args */
+
+ /* 	     Finds and returns the index of char* c in args */
+ /* 	     Returns -1 if not found */
+ /* 	     	     (useless, needed an int to return if fail, */
+ /* 		      but < > and | are all guaranteed to be in */
+ /* 		      input before calling redirect_index()) */
+
 int redirect_index(char* args[], char *c){
   int i = 1;
   while(args){
@@ -64,6 +78,16 @@ int redirect_index(char* args[], char *c){
   }
   return -1;
 }
+
+ /*  Inputs: char *path */
+ /*   	     char *args[] */
+ /* 	     int  *ind */
+ /* Returns: Nothing */
+
+ /* 	     Redirects inputs and outputs from stdin and stdout using dup() */
+ /* 	     Execvps commands */
+ /* 	     If arguments for input and output are invalid, prints error */
+ /* 	     	message */
 
 //Takes in the arguments to execvp
 void redirect(char* path, char* args [], int* ind){
@@ -138,6 +162,14 @@ void redirect(char* path, char* args [], int* ind){
   close(out);
 
 }
+
+ /*  Inputs: Nothing */
+ /* Returns: Nothing */
+
+ /* 	     Handles everything else */
+ /* 	     Parses lines of commands and splits them into command arrays */
+ /* 	     Execvps non-redirected commands */
+ /* 	     Handles exiting */
 
 void main() {
   umask(0000);

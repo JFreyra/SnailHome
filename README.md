@@ -40,7 +40,7 @@ Function Headers:
 		      input before calling redirect_index())
 
 
-	void redirect(){
+	void redirect()
 	      Inputs: char *path
 	      	      char *args[]
 		      int  *ind
@@ -48,4 +48,15 @@ Function Headers:
 
 	     Redirects inputs and outputs from stdin and stdout using dup()
 	     Execvps commands
-	     
+	     If arguments for input and output are invalid, prints error
+	     	message
+
+
+	void main()
+	      Inputs: Nothing
+	     Returns: Nothing
+
+	     Handles everything else
+	     Parses lines of commands and splits them into command arrays
+	     Execvps non-redirected commands
+	     Handles exiting
