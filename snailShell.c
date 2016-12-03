@@ -124,7 +124,7 @@ void redirect(char* path, char* args [], int* ind){
   int pid=fork();
 
   if (!pid){
-    execvp(args[0],args);
+    execvp(path,args);
     exit(1);
   }
     
@@ -165,7 +165,6 @@ void main() {
 
     strtok(input,"\n");
 
-    // nest for ; split
     char *s = input;
     char *mult[10];
     int multcom = 1;
@@ -226,7 +225,6 @@ void main() {
       /* free(path); */
       /* free(input); */
     }
-    // end nest
 
   }
   
