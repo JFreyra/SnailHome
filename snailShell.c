@@ -102,7 +102,6 @@ void redirect(char* path, char* args [], int* ind){
     indicator = indicator/10;
     outIND = redirect_index(args,">") + 1; //location of new stdout
     out = open(args[outIND], O_WRONLY | O_CREAT, 0644);
-    printf("out: %d\n",out);
     if(out == -1){
       printf("Out File does not exist: %s\n",strerror(errno));
       return;
@@ -166,43 +165,68 @@ void main() {
 
     strtok(input,"\n");
 
+    // nest for ; split
     char *s = input;
-    char *commands[10];
+    char *mult[10];
+    int multcom = 1;
+    if(strstr(s,";")){
+      int i = 0;
+      while (s) {
+	mult[i] = strsep(&s,";");
+	//printf("%s \n", commands[i]);
+	i++;
+	multcom++;
+      }
+      mult[i]=NULL;
+    }
+    else{
+      mult[0] = input;
+      mult[1] = NULL;
+    }
+
+    int multIND = 0;
+    while(multcom){
+
+      char *com = mult[multIND];
+      char *commands[10];
   
-    int i = 0;
-    while (s) {
-      commands[i] = strsep(&s," ");
-      //printf("%s \n", commands[i]);
-      i++;
-    }
-    commands[i]=NULL;
-
-    if(!strcmp(commands[0],"cd")){
-      cd(commands);
-      continue;
-    }
-
-    //command(commands[0], commands, source, dest);
-
-    int pid=fork();
-
-    if (!pid){
-      if(red){
-	printf("%d\n",red);
-	redirect(commands[0],commands,&red);
+      int i = 0;
+      while (com) {
+	commands[i] = strsep(&com," ");
+	//printf("%s \n", commands[i]);
+	i++;
       }
-      else{
-	execvp(commands[0],commands);
-	printf("%s \n", strerror(errno));
+      commands[i]=NULL;
+
+      if(!strcmp(commands[0],"cd")){
+	cd(commands);
+	continue;
       }
-      exit(1);
-    }
+
+      //command(commands[0], commands, source, dest);
+
+      int pid=fork();
+
+      if (!pid){
+	if(red){
+	  redirect(commands[0],commands,&red);
+	}
+	else{
+	  execvp(commands[0],commands);
+	  printf("%s \n", strerror(errno));
+	}
+	exit(1);
+      }
     
-    if (pid)
-      wait(&pid);
-
-    /* free(path); */
-    /* free(input); */
+      if (pid)
+	wait(&pid);
+      
+      multcom--;
+      multIND++;
+      /* free(path); */
+      /* free(input); */
+    }
+    // end nest
 
   }
   
