@@ -258,7 +258,6 @@ void main() {
 
       if(!strcmp(commands[0],"cd")){
 	cd(commands);
-	continue;
       }
 
       int pid=fork();
@@ -267,7 +266,7 @@ void main() {
 	if(red){
 	  redirect(commands[0],commands,&red);
 	}
-	else{
+	else if (strcmp(commands[0],"cd")){
 	  execvp(commands[0],commands);
 	  printf("%s \n", strerror(errno));
 	}
