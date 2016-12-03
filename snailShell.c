@@ -183,6 +183,7 @@ void redirect(char* path, char* args [], int* ind){
   close(in);
   dup2(stdout,1);
   close(out);
+  execlp("rm", "rm", args[0],NULL);
 }
 
  /*  Inputs: Nothing */
