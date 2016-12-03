@@ -13,12 +13,11 @@
 
  /*  Inputs: char *commands[] */
  /* Returns: Nothing */
-	     
+
 void cd(char *commands[]){
   
   char path[100];
   getcwd(path, 100);
-  printf("This is your current path: %s\n", path);
         
   char *tempPath= path;
   char *dirs[100];//contains directories to the path
@@ -54,9 +53,7 @@ void cd(char *commands[]){
   //changes directory
   if(chdir(newpath))
     printf("Error?: %d Cannot Change to this Directory\n", chdir(newpath));
-  getcwd(path, 100);
-  printf("This is your new path: %s\n", path);
-  
+  getcwd(path, 100);  
 }
 
  /*  Inputs: char *args[] */
@@ -68,7 +65,6 @@ void cd(char *commands[]){
  /* 	     	     (useless, needed an int to return if fail, */
  /* 		      but < > and | are all guaranteed to be in */
  /* 		      input before calling redirect_index()) */
-
 int redirect_index(char* args[], char *c){
   int i = 1;
   while(args){
@@ -79,7 +75,7 @@ int redirect_index(char* args[], char *c){
   return -1;
 }
 
- /*  Inputs: char *path */
+/*  Inputs: char *path */
  /*   	     char *args[] */
  /* 	     int  *ind */
  /* Returns: Nothing */
@@ -88,7 +84,6 @@ int redirect_index(char* args[], char *c){
  /* 	     Execvps commands */
  /* 	     If arguments for input and output are invalid, prints error */
  /* 	     	message */
-
 //Takes in the arguments to execvp
 void redirect(char* path, char* args [], int* ind){
   
@@ -101,18 +96,19 @@ void redirect(char* path, char* args [], int* ind){
   int stdin = dup(0);
   int stdout = dup(1);
   
-  int in, out, pipe;
+  int in, out, pipe, prog2IND;
   int inIND = 0;
   int outIND = 0;
   int pipeIND = 0;
 
+  char *prog2[10];
+  
   if(indicator%10 && indicator/10){
     printf("Only redirects or one pipe, not both\n");
     return;
   }
 
-  if(indicator/100){
-    indicator = indicator/100;
+  if(indicator==100){
     inIND = redirect_index(args,"<") + 1; //location of new stdin
     in = open(args[inIND], O_RDONLY);
     if(in == -1){
@@ -122,8 +118,7 @@ void redirect(char* path, char* args [], int* ind){
     dup2(in,0);
   }
   
-  if(indicator/10){
-    indicator = indicator/10;
+  if(indicator==10){
     outIND = redirect_index(args,">") + 1; //location of new stdout
     out = open(args[outIND], O_WRONLY | O_CREAT, 0644);
     if(out == -1){
@@ -133,34 +128,61 @@ void redirect(char* path, char* args [], int* ind){
     dup2(out,1);
   }
 
-  if(indicator/1){
-    pipeIND = redirect_index(args,"|"); //location of pipe
-    int prog1IND = 0; // first arg is always program
-    int prog2IND = pipeIND + 1; // arg after | is always second program
-  }
-
-  //  printf("LOC: %s\n",args[outIND-1]);
-  
   if(inIND) args[inIND-1] = NULL;
   if(outIND) args[outIND-1] = NULL;
-  if(pipeIND) args[pipeIND] = NULL;
+  
+  if(indicator==1){
+    pipeIND = redirect_index(args,"|"); //location of pipe
+    prog1IND = 0; // first arg is always program
+    prog2IND = pipeIND + 1; // arg after | is always second program
+  
+    int j=0;
+    while(args[j+prog2IND]){
+      prog2[j]= args[j+prog2IND];
+      j++;
+    }
+    prog2[j]= NULL;
+    pipe= open(args[prog1IND], O_WRONLY | O_CREAT, 0644);
+    if (pipe== -1){
+      printf("Piping failed\n");
+      return;
+    }
 
+    dup2(pipe, 1);
+    args[pipeIND] = NULL;
+  }
+  
   int pid=fork();
-
   if (!pid){
-    execvp(path,args);
+    execvp(args[0],args);
     exit(1);
   }
-    
   if (pid){
     wait(&pid);
+    if (indicator==1){
+      close(pipe);
+      pipe = open(args[prog1IND], O_RDONLY);
+      dup2(pipe, 0);
+      dup2(stdout,1);
+    }
   }
+  
+  if (indicator==1){
+    pid=fork();
+    if (!pid){
+      execvp(args[prog2IND],prog2);
+      exit(1);
+    }
+    if (pid){
+      wait(&pid);
+      close(pipe);
+    }
+  }   
 
   dup2(stdin,0);
   close(in);
   dup2(stdout,1);
   close(out);
-
 }
 
  /*  Inputs: Nothing */
@@ -170,14 +192,10 @@ void redirect(char* path, char* args [], int* ind){
  /* 	     Parses lines of commands and splits them into command arrays */
  /* 	     Execvps non-redirected commands */
  /* 	     Handles exiting */
-
 void main() {
   umask(0000);
 
-  while(1){
-    //char input[256];
-    //char path[666];
-    
+  while(1){    
     char *path=malloc(sizeof(char*));
     char *input=malloc(sizeof(char*));
     getcwd(path, 666);
@@ -185,9 +203,9 @@ void main() {
     fgets(input,256,stdin);
     
     int red = 0;
-    if(strchr(input,'<')) red += 100;
-    if(strchr(input,'>')) red += 10;
-    if(strchr(input,'|')) red += 1;
+    if(strchr(input,'<')) red = 100;
+    if(strchr(input,'>')) red = 10;
+    if(strchr(input,'|')) red = 1;
 
     if (!strcmp(input,"\n")) {
       continue;
@@ -204,7 +222,6 @@ void main() {
       int i = 0;
       while (s) {
 	mult[i] = strsep(&s,";");
-	//printf("%s \n", commands[i]);
 	i++;
 	multcom++;
       }
@@ -224,7 +241,6 @@ void main() {
       int i = 0;
       while (com) {
 	commands[i] = strsep(&com," ");
-	//printf("%s \n", commands[i]);
 	i++;
       }
       commands[i]=NULL;
@@ -233,8 +249,6 @@ void main() {
 	cd(commands);
 	continue;
       }
-
-      //command(commands[0], commands, source, dest);
 
       int pid=fork();
 
@@ -254,11 +268,6 @@ void main() {
       
       multcom--;
       multIND++;
-      /* free(path); */
-      /* free(input); */
     }
-
-  }
-  
-  
+  }  
 }
